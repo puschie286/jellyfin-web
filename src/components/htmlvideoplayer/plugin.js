@@ -162,7 +162,7 @@ define(['browser', 'require', 'events', 'apphost', 'loading', 'dom', 'playbackMa
 
             require(['browserdeviceprofile'], function (profileBuilder) {
 
-                resolve(profileBuilder({}));
+                resolve(profileBuilder.default({}));
             });
         });
     }

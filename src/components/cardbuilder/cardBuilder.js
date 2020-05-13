@@ -11,7 +11,7 @@ import connectionManager from 'connectionManager';
 import itemHelper from 'itemHelper';
 import focusManager from 'focusManager';
 import indicators from 'indicators';
-import globalize from 'globalize';
+import * as globalize from 'globalize';
 import layoutManager from 'layoutManager';
 import dom from 'dom';
 import browser from 'browser';

@@ -2,7 +2,7 @@ import subtitleSettings from 'subtitleSettings';
 import * as userSettings from 'userSettings';
 import autoFocuser from 'autoFocuser';
 
-export class SubtitleController {
+export default class SubtitleController {
     constructor(view, params) {
         this.userId = params.userId || ApiClient.getCurrentUserId();
         this.currentSettings = this.userId === ApiClient.getCurrentUserId() ? userSettings : new userSettings();
@@ -59,5 +59,3 @@ export class SubtitleController {
         }
     }
 }
-
-export default SubtitleController;

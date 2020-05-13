@@ -1,186 +1,180 @@
-define(['viewContainer', 'focusManager', 'queryString', 'layoutManager'], function (viewContainer, focusManager, queryString, layoutManager) {
-    'use strict';
+import viewContainer from 'viewContainer';
+import focusManager from 'focusManager';
+import queryString from 'queryString';
+import layoutManager from 'layoutManager';
 
-    var currentView;
-    var dispatchPageEvents;
+let currentViewInstance;
+let dispatchPageEventsArray;
 
-    viewContainer.setOnBeforeChange(function (newView, isRestored, options) {
+viewContainer.setOnBeforeChange(function (newView, isRestored, options) {
 
-        var lastView = currentView;
-        if (lastView) {
+    let lastView = currentViewInstance;
+    if (lastView) {
 
-            var beforeHideResult = dispatchViewEvent(lastView, null, 'viewbeforehide', true);
+        let beforeHideResult = dispatchViewEvent( lastView, null, 'viewbeforehide', true );
 
-            if (!beforeHideResult) {
-                // todo: cancel
-            }
-        }
-
-        var eventDetail = getViewEventDetail(newView, options, isRestored);
-
-        if (!newView.initComplete) {
-            newView.initComplete = true;
-
-            if (typeof options.controllerFactory === 'function') {
-
-                // Use controller method
-                var controller = new options.controllerFactory(newView, eventDetail.detail.params);
-            } else if (typeof options.controllerFactory === 'object') {
-
-                // Use controller class
-                var controller = new options.controllerFactory.default(newView, eventDetail.detail.params);
-            }
-
-            if (!options.controllerFactory || dispatchPageEvents) {
-                dispatchViewEvent(newView, eventDetail, 'viewinit');
-            }
-        }
-
-        dispatchViewEvent(newView, eventDetail, 'viewbeforeshow');
-    });
-
-    function onViewChange(view, options, isRestore) {
-
-        var lastView = currentView;
-        if (lastView) {
-            dispatchViewEvent(lastView, null, 'viewhide');
-        }
-
-        currentView = view;
-
-        var eventDetail = getViewEventDetail(view, options, isRestore);
-
-        if (!isRestore) {
-            if (options.autoFocus !== false) {
-                focusManager.autoFocus(view);
-            }
-        } else if (!layoutManager.mobile) {
-            if (view.activeElement && document.body.contains(view.activeElement) && focusManager.isCurrentlyFocusable(view.activeElement)) {
-                focusManager.focus(view.activeElement);
-            } else {
-                focusManager.autoFocus(view);
-            }
-        }
-
-        view.dispatchEvent(new CustomEvent('viewshow', eventDetail));
-
-        if (dispatchPageEvents) {
-            view.dispatchEvent(new CustomEvent('pageshow', eventDetail));
+        if (!beforeHideResult) {
+            // todo: cancel
         }
     }
 
-    function getProperties(view) {
-        var props = view.getAttribute('data-properties');
+    const eventDetail = getViewEventDetail( newView, options, isRestored );
 
-        if (props) {
-            return props.split(',');
+    if (!newView.initComplete) {
+        newView.initComplete = true;
+
+        if (typeof options.controllerFactory === 'function') {
+
+            // Use controller method
+            new options.controllerFactory(newView, eventDetail.detail.params);
+        } else if (typeof options.controllerFactory === 'object') {
+
+            // Use controller class
+            new options.controllerFactory.default(newView, eventDetail.detail.params);
         }
 
-        return [];
+        if (!options.controllerFactory || dispatchPageEventsArray) {
+            dispatchViewEvent(newView, eventDetail, 'viewinit');
+        }
     }
 
-    function dispatchViewEvent(view, eventInfo, eventName, isCancellable) {
+    dispatchViewEvent(newView, eventDetail, 'viewbeforeshow');
+});
 
-        if (!eventInfo) {
-            eventInfo = {
-                detail: {
-                    type: view.getAttribute('data-type'),
-                    properties: getProperties(view)
-                },
-                bubbles: true,
-                cancelable: isCancellable
-            };
-        }
+function onViewChange(view, options, isRestore) {
 
-        eventInfo.cancelable = isCancellable || false;
-
-        var eventResult = view.dispatchEvent(new CustomEvent(eventName, eventInfo));
-
-        if (dispatchPageEvents) {
-            eventInfo.cancelable = false;
-            view.dispatchEvent(new CustomEvent(eventName.replace('view', 'page'), eventInfo));
-        }
-
-        return eventResult;
+    const lastView = currentViewInstance;
+    if (lastView) {
+        dispatchViewEvent(lastView, null, 'viewhide');
     }
 
-    function getViewEventDetail(view, options, isRestore) {
+    currentViewInstance = view;
 
-        var url = options.url;
-        var index = url.indexOf('?');
-        var params = index === -1 ? {} : queryString.parse(url.substring(index + 1));
+    const eventDetail = getViewEventDetail( view, options, isRestore );
 
-        return {
+    if (!isRestore) {
+        if (options.autoFocus !== false) {
+            focusManager.autoFocus(view);
+        }
+    } else if (!layoutManager.mobile) {
+        if (view.activeElement && document.body.contains(view.activeElement) && focusManager.isCurrentlyFocusable(view.activeElement)) {
+            focusManager.focus(view.activeElement);
+        } else {
+            focusManager.autoFocus(view);
+        }
+    }
+
+    view.dispatchEvent(new CustomEvent('viewshow', eventDetail));
+
+    if (dispatchPageEventsArray) {
+        view.dispatchEvent(new CustomEvent('pageshow', eventDetail));
+    }
+}
+
+function getProperties(view) {
+    const props = view.getAttribute( 'data-properties' );
+
+    if (props) {
+        return props.split(',');
+    }
+
+    return [];
+}
+
+function dispatchViewEvent(view, eventInfo, eventName, isCancellable) {
+
+    if (!eventInfo) {
+        eventInfo = {
             detail: {
                 type: view.getAttribute('data-type'),
-                properties: getProperties(view),
-                params: params,
-                isRestored: isRestore,
-                state: options.state,
-
-                // The route options
-                options: options.options || {}
+                properties: getProperties(view)
             },
             bubbles: true,
-            cancelable: false
+            cancelable: isCancellable
         };
     }
 
-    function resetCachedViews() {
-        // Reset all cached views whenever the skin changes
-        viewContainer.reset();
+    eventInfo.cancelable = isCancellable || false;
+
+    const eventResult = view.dispatchEvent(new CustomEvent(eventName, eventInfo));
+
+    if (dispatchPageEventsArray) {
+        eventInfo.cancelable = false;
+        view.dispatchEvent(new CustomEvent(eventName.replace('view', 'page'), eventInfo));
     }
 
-    document.addEventListener('skinunload', resetCachedViews);
+    return eventResult;
+}
 
-    function ViewManager() {
+function getViewEventDetail(view, options, isRestore) {
+
+    const url = options.url;
+    const index = url.indexOf('?');
+    const params = index === -1 ? {} : queryString.parse(url.substring(index + 1));
+
+    return {
+        detail: {
+            type: view.getAttribute('data-type'),
+            properties: getProperties(view),
+            params: params,
+            isRestored: isRestore,
+            state: options.state,
+
+            // The route options
+            options: options.options || {}
+        },
+        bubbles: true,
+        cancelable: false
+    };
+}
+
+function resetCachedViews() {
+    // Reset all cached views whenever the skin changes
+    viewContainer.reset();
+}
+
+document.addEventListener('skinunload', resetCachedViews);
+
+export function loadView(options) {
+    let lastView = currentViewInstance;
+
+    // Record the element that has focus
+    if (lastView) {
+        lastView.activeElement = document.activeElement;
     }
 
-    ViewManager.prototype.loadView = function (options) {
+    if (options.cancel) {
+        return;
+    }
 
-        var lastView = currentView;
+    viewContainer.loadView(options).then(function (view) {
+        onViewChange(view, options);
+    });
+}
 
-        // Record the element that has focus
-        if (lastView) {
-            lastView.activeElement = document.activeElement;
-        }
+export function tryRestoreView(options, onViewChanging) {
 
-        if (options.cancel) {
-            return;
-        }
+    if (options.cancel) {
+        return Promise.reject({ cancelled: true });
+    }
 
-        viewContainer.loadView(options).then(function (view) {
+    // Record the element that has focus
+    if (currentViewInstance) {
+        currentViewInstance.activeElement = document.activeElement;
+    }
 
-            onViewChange(view, options);
-        });
-    };
+    return viewContainer.tryRestoreView(options).then(function (view) {
 
-    ViewManager.prototype.tryRestoreView = function (options, onViewChanging) {
+        onViewChanging();
+        onViewChange(view, options, true);
 
-        if (options.cancel) {
-            return Promise.reject({ cancelled: true });
-        }
+    });
+}
 
-        // Record the element that has focus
-        if (currentView) {
-            currentView.activeElement = document.activeElement;
-        }
+export function currentView() {
+    return currentViewInstance;
+}
 
-        return viewContainer.tryRestoreView(options).then(function (view) {
-
-            onViewChanging();
-            onViewChange(view, options, true);
-
-        });
-    };
-
-    ViewManager.prototype.currentView = function () {
-        return currentView;
-    };
-
-    ViewManager.prototype.dispatchPageEvents = function (value) {
-        dispatchPageEvents = value;
-    };
-
-    return new ViewManager();
-});
+export function dispatchPageEvents(value) {
+    dispatchPageEventsArray = value;
+}

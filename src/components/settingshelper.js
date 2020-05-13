@@ -1,4 +1,4 @@
-import globalize from 'globalize';
+import * as globalize from 'globalize';
 /**
  * Helper for handling settings
  * @module components/settingsHelper

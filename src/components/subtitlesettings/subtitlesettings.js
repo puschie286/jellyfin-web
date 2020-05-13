@@ -1,5 +1,5 @@
 import require from 'require';
-import globalize from 'globalize';
+import * as globalize from 'globalize';
 import appHost from 'apphost';
 import appSettings from 'appSettings';
 import focusManager from 'focusManager';
@@ -160,7 +160,7 @@ function embed(options, self) {
     });
 }
 
-export class SubtitleSettings {
+export default class SubtitleSettings {
 
     constructor(options) {
 
@@ -217,5 +217,3 @@ export class SubtitleSettings {
         return false;
     }
 }
-
-export default SubtitleSettings;

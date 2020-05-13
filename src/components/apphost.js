@@ -1,3 +1,4 @@
+// NOTE: migration to es6 will change calling/importing style -> wait for most other modules to be migrated
 define(['appSettings', 'browser', 'events', 'htmlMediaHelper', 'webSettings', 'globalize'], function (appSettings, browser, events, htmlMediaHelper, webSettings, globalize) {
     'use strict';
 
@@ -27,7 +28,7 @@ define(['appSettings', 'browser', 'events', 'htmlMediaHelper', 'webSettings', 'g
                 profileOptions.supportsDts = uwpMediaCaps.supportsDTS();
                 profileOptions.supportsTrueHd = uwpMediaCaps.supportsDolby();
                 profileOptions.audioChannels = uwpMediaCaps.getAudioChannels();
-                resolve(profileBuilder(profileOptions));
+                resolve(profileBuilder.default(profileOptions));
             });
         });
     }
@@ -44,11 +45,11 @@ define(['appSettings', 'browser', 'events', 'htmlMediaHelper', 'webSettings', 'g
                 var profile;
 
                 if (window.NativeShell) {
-                    profile = window.NativeShell.AppHost.getDeviceProfile(profileBuilder);
+                    profile = window.NativeShell.AppHost.getDeviceProfile(profileBuilder.default);
                 } else {
                     var builderOpts = getBaseProfileOptions(item);
                     builderOpts.enableSsaRender = (item && !options.isRetry && 'allcomplexformats' !== appSettings.get('subtitleburnin'));
-                    profile = profileBuilder(builderOpts);
+                    profile = profileBuilder.default(builderOpts);
                 }
 
                 resolve(profile);
@@ -133,9 +134,9 @@ define(['appSettings', 'browser', 'events', 'htmlMediaHelper', 'webSettings', 'g
                 var profile;
 
                 if (window.NativeShell) {
-                    profile = window.NativeShell.AppHost.getSyncProfile(profileBuilder, appSettings);
+                    profile = window.NativeShell.AppHost.getSyncProfile(profileBuilder.default, appSettings);
                 } else {
-                    profile = profileBuilder();
+                    profile = profileBuilder.default();
                     profile.MaxStaticMusicBitrate = appSettings.maxStaticMusicBitrate();
                 }
 
